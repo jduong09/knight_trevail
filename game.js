@@ -57,12 +57,24 @@ class Node {
 }
 
 // Tree will build 
-const buildTree(location) {
+const buildTree = (location) => {
   const root = new Node(location);
 
+  let nextPossibleMoves = nextPossibleMoves(location);
+
+  root.children.push(nextPossibleMoves);
+}
+
+const nextPossibleMoves = (currentLocation) => {
+  let nextPossibleMoves = [];
   KNIGHT_POSSIBLE_MOVES.forEach(move => {
-    
+    const nextLocation = [currentLocation.data[0] + move[0], currentLocation.data[1] + move[1]];
+    if (nextLocation[0] >= 0 && nextLocation[0] < 8 && nextLocation[1] >= 0 && nextLocation[1] < 8) {
+      nextPossibleMoves.push(nextLocation);
+    }
   });
+
+  return nextPossibleMoves;
 }
 
 // build a function knightMoves that shows the shortest possible way to get
@@ -88,5 +100,4 @@ class Game {
   }
 }
 
-const game = new Game();
-console.log(game.run());
+const tree = new Tree([0, 0]);
