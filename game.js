@@ -1,3 +1,5 @@
+const prompt = require("prompt-sync")({ sigint: true });
+
 // [Horizontal, Vertical]
 // -int Left and Bottom
 // +int Right and Top
@@ -45,7 +47,7 @@ class ChessBoard {
 
 class Tree {
   constructor(location) {
-    this.root = buildTree(location); 
+    this.root = new Node(location);
   }
 }
 
@@ -57,47 +59,68 @@ class Node {
 }
 
 // Tree will build 
-const buildTree = (location) => {
-  const root = new Node(location);
-
-  let nextPossibleMoves = nextPossibleMoves(location);
-
-  root.children.push(nextPossibleMoves);
+const buildTree = (rootNode, endLocation) => {
+  return nextPossibleMoves(rootNode, endLocation);
 }
 
-const nextPossibleMoves = (currentLocation) => {
-  let nextPossibleMoves = [];
-  KNIGHT_POSSIBLE_MOVES.forEach(move => {
-    const nextLocation = [currentLocation.data[0] + move[0], currentLocation.data[1] + move[1]];
-    if (nextLocation[0] >= 0 && nextLocation[0] < 8 && nextLocation[1] >= 0 && nextLocation[1] < 8) {
-      nextPossibleMoves.push(nextLocation);
-    }
-  });
+const nextPossibleMoves = (currentLocation, endLocation) => {
+  let queue = [currentLocation];
+  let foundEndLocation = false;
 
-  return nextPossibleMoves;
+  while (!foundEndLocation) {
+    const currentNode = queue.shift();
+    KNIGHT_POSSIBLE_MOVES.forEach(move => {
+      const nextLocation = [currentNode.data[0] + move[0], currentNode.data[1] + move[1]];
+      if (nextLocation[0] >= 0 && nextLocation[0] < 8 && nextLocation[1] >= 0 && nextLocation[1] < 8) {
+        if (nextLocation[0] === endLocation[0] && nextLocation[1] === endLocation[1]) {
+          foundEndLocation = true;
+        }
+        const newNode = new Node(nextLocation);
+        queue.push(newNode);
+        currentNode.children.push(newNode);
+      }
+    });
+  }
+
+  return;
 }
 
 // build a function knightMoves that shows the shortest possible way to get
 // from one square to another by outputting 
 // all squares the knight will stop on along the way.
 class Game {
-  constructor() {
+  constructor(start) {
     this.board = new ChessBoard;
-    this.knight = new Knight([0, 0]);
+    this.knight = new Knight(start);
   }
 
-  run() {
-    this.knight.move([2, 1]);
-    return this.knight.location;
-  }
-
-  knightMoves(location) {
+  knightMoves(endLocation) {
     // Based on knights location (root)
-    // Need all possible move the knight can make
-    // 8 subtrees, each subtree then has 8 subtrees.
-    // again and again until we reach location.
-
+    // Create new Tree Class based on knight's starting location.
+    const tree = new Tree(this.knight.location);
+    buildTree(tree.root, endLocation);
+    const string = displayFastestMove(tree.root, endLocation);
+    return string;
+    
   }
 }
 
-const tree = new Tree([0, 0]);
+const findEndLocation = (root, endLocation) => {
+  if (!root.children.length) {
+    return;
+  }
+
+  if (root.data[0] === endLocation[0] && root.data[1] === endLocation[1]) {
+    return `${root.data}`;
+  }
+
+  return `${root.data} - ${displayFastestMove(endLocation)}`;
+}
+
+const promptStartingLocation = prompt('Input Starting Location: "x y"');
+const promptEndingLocation = prompt('Input Ending Location: "x y"');
+const game = new Game([parseInt(promptStartingLocation.split(' ')[0]), parseInt(promptStartingLocation.split(' ')[1])]);
+console.log(game);
+const endLocation = [parseInt(promptEndingLocation.split(' ')[0]), parseInt(promptEndingLocation.split(' ')[1])];
+
+console.log(game.knightMoves(endLocation));
