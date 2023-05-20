@@ -108,6 +108,9 @@ class Game {
       possibleMoves.push(findEndLocation(child, endLocation));
     });
 
+    console.log('Possible Moves: ', possibleMoves);
+
+
     let filteredMoves = [];
     for (let i = 0; i < possibleMoves.length; i++) {
       const moveSet = possibleMoves[i];
@@ -115,6 +118,8 @@ class Game {
       if (moveSet === false) {
         continue;
       }
+
+      console.log(moveSet);
 
       // Array with moves locations. 
       for (let j = 0; j < moveSet.length; j++) {
@@ -125,9 +130,7 @@ class Game {
       }
     }
 
-    console.log(possibleMoves);
-    console.log(filteredMoves);
-
+    /*
     let shortestMoveset = filteredMoves[0];
     for (let a = 1; a < filteredMoves.length; a++) {
       if (filteredMoves[a].length <= shortestMoveset.length) {
@@ -136,6 +139,7 @@ class Game {
     }
     console.log()
     return `${start} => ${shortestMoveset.join(' => ')}`;
+    */
   }
 }
 
@@ -150,12 +154,15 @@ const findEndLocation = (root, endLocation) => {
     return false;
   }
 
-  let arr = [root.data];
+  let arr = [];
   root.children.forEach(child => {
-    if (findEndLocation(child, endLocation)) {
-      arr.push(endLocation);
+    const recursionResult = findEndLocation(child, endLocation);
+    if (!recursionResult) {
+      return false;
     } else {
-      findEndLocation(child, endLocation);
+      recursionResult.unshift(root.data);
+      console.log('Recursion Result: ', recursionResult);
+      arr.push(recursionResult);
     }
   });
 
@@ -169,5 +176,3 @@ const game = new Game(startLocation);
 const endLocation = [parseInt(promptEndingLocation.split(' ')[0]), parseInt(promptEndingLocation.split(' ')[1])];
 
 game.knightMoves(startLocation, endLocation);
-
-console.log(game);
