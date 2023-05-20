@@ -63,8 +63,12 @@ const buildTree = (rootNode, endLocation) => {
   return nextPossibleMoves(rootNode, endLocation);
 }
 
+// From Knights starting position, we can iterate through the possible moves, and check to see if the possible move is valid, and if it's valid, then it is a child of the starting postion.
+// Possible 8 moves.
+// Then we would do it again, with each of the children of the starting position. 
 const nextPossibleMoves = (currentLocation, endLocation) => {
   let queue = [currentLocation];
+  
   let foundEndLocation = false;
 
   while (!foundEndLocation) {
@@ -81,7 +85,6 @@ const nextPossibleMoves = (currentLocation, endLocation) => {
       }
     });
   }
-
   return;
 }
 
@@ -94,33 +97,77 @@ class Game {
     this.knight = new Knight(start);
   }
 
-  knightMoves(endLocation) {
+  knightMoves(start, end) {
     // Based on knights location (root)
     // Create new Tree Class based on knight's starting location.
-    const tree = new Tree(this.knight.location);
-    buildTree(tree.root, endLocation);
-    const string = displayFastestMove(tree.root, endLocation);
-    return string;
-    
+    const tree = new Tree(start);
+    buildTree(tree.root, end);
+
+    let possibleMoves = [];
+    tree.root.children.forEach(child => {
+      possibleMoves.push(findEndLocation(child, endLocation));
+    });
+
+    let filteredMoves = [];
+    for (let i = 0; i < possibleMoves.length; i++) {
+      const moveSet = possibleMoves[i];
+      // if moveset === false, not the path.
+      if (moveSet === false) {
+        continue;
+      }
+
+      // Array with moves locations. 
+      for (let j = 0; j < moveSet.length; j++) {
+        const move = moveSet[j];
+        if (move[0] === endLocation[0] && move[1] === endLocation[1]) {
+          filteredMoves.push(moveSet);
+        }
+      }
+    }
+
+    console.log(possibleMoves);
+    console.log(filteredMoves);
+
+    let shortestMoveset = filteredMoves[0];
+    for (let a = 1; a < filteredMoves.length; a++) {
+      if (filteredMoves[a].length <= shortestMoveset.length) {
+        shortestMoveset = filteredMoves[a];
+      }
+    }
+    console.log()
+    return `${start} => ${shortestMoveset.join(' => ')}`;
   }
 }
 
 const findEndLocation = (root, endLocation) => {
-  if (!root.children.length) {
-    return;
-  }
-
+  // If the current root is the end location, we found it. SO what do we want to do.
   if (root.data[0] === endLocation[0] && root.data[1] === endLocation[1]) {
-    return `${root.data}`;
+    return [root.data];
   }
 
-  return `${root.data} - ${displayFastestMove(endLocation)}`;
+  // If there are no more children, then we go back up the stack, because we can't keep looking in this direction.
+  if (!root.children.length) {
+    return false;
+  }
+
+  let arr = [root.data];
+  root.children.forEach(child => {
+    if (findEndLocation(child, endLocation)) {
+      arr.push(endLocation);
+    } else {
+      findEndLocation(child, endLocation);
+    }
+  });
+
+  return arr;
 }
 
 const promptStartingLocation = prompt('Input Starting Location: "x y"');
 const promptEndingLocation = prompt('Input Ending Location: "x y"');
-const game = new Game([parseInt(promptStartingLocation.split(' ')[0]), parseInt(promptStartingLocation.split(' ')[1])]);
-console.log(game);
+const startLocation = [parseInt(promptStartingLocation.split(' ')[0]), parseInt(promptStartingLocation.split(' ')[1])];
+const game = new Game(startLocation);
 const endLocation = [parseInt(promptEndingLocation.split(' ')[0]), parseInt(promptEndingLocation.split(' ')[1])];
 
-console.log(game.knightMoves(endLocation));
+game.knightMoves(startLocation, endLocation);
+
+console.log(game);
